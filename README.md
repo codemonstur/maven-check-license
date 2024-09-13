@@ -53,20 +53,20 @@ The plugin will run during the `validate` phase.
 
 The following settings can be used for the plugin:
 
-| config name                 | default value | description                                                                                                  |
-|-----------------------------|---------------|--------------------------------------------------------------------------------------------------------------|
-| enabled                     | true          | Turns the plugin on or off                                                                                   |
-| printViolations             | true          | If enabled will print a warning in the log for each dependency that failed our rules                         |
-| printCompliant              | false         | If enabled will print an info message for each dependency that passed our rules                              |
-| failBuildOnViolation        | true          | If enabled will cause the build to fail if any dependency violates our rules                                 |
-| checkCodeDependencies       | true          | If enabled will include all code dependencies in the pom, including transitive dependencies                  |
-| checkPluginDependencies     | false         | If enabled will include all plugin dependencies in the pom                                                   |
-| includeCompileDependencies  | true          | If enabled will include all dependencies with the compile scope                                              |                            |
-| includeRuntimeDependencies  | true          | If enabled will include all dependencies with the runtime scope                                              | 
-| includeProvidedDependencies | false         | If enabled will include all dependencies with the provided scope                                             |
-| includeTestDependencies     | false         | If enabled will include all dependencies with the test scope                                                 |
-| strategy                    | passOnMatch   | passOnMatch makes the rules behave like a whitelist, failOnMatch will make the rules behave like a blacklist |
-| rules                       | []            | The list of rules. Use the tag <rule> and follow the rule format below                                       |
+| config name                 | default value | description                                                                                              |
+|-----------------------------|---------------|----------------------------------------------------------------------------------------------------------|
+| enabled                     | true          | Turns the plugin on or off                                                                               |
+| printViolations             | true          | If true will print a warning in the log for each dependency that failed our rules                        |
+| printCompliant              | false         | If true will print an info message for each dependency that passed our rules                             |
+| failBuildOnViolation        | true          | If true will cause the build to fail if any dependency violates our rules                                |
+| checkCodeDependencies       | true          | If true will include all code dependencies in the pom, including transitive dependencies                 |
+| checkPluginDependencies     | false         | If true will include all plugin dependencies in the pom                                                  |
+| includeCompileDependencies  | true          | If true will include all dependencies with the compile scope                                             |                            |
+| includeRuntimeDependencies  | true          | If true will include all dependencies with the runtime scope                                             | 
+| includeProvidedDependencies | false         | If true will include all dependencies with the provided scope                                            |
+| includeTestDependencies     | false         | If true will include all dependencies with the test scope                                                |
+| strategy                    | passOnMatch   | passOnMatch makes the rules behave like a whitelist, failOnMatch makes the rules behave like a blacklist |
+| rules                       | []            | The list of rules. Use the tag <rule> and follow the rule format below                                   |
 
 ### Rule format
 
