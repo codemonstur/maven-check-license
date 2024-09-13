@@ -66,7 +66,7 @@ The following settings can be used for the plugin:
 | includeProvidedDependencies | false         | If true will include all dependencies with the provided scope                                            |
 | includeTestDependencies     | false         | If true will include all dependencies with the test scope                                                |
 | strategy                    | passOnMatch   | passOnMatch makes the rules behave like a whitelist, failOnMatch makes the rules behave like a blacklist |
-| rules                       | []            | The list of rules. Use the tag <rule> and follow the rule format below                                   |
+| rules                       | []            | The list of rules. Use the tag `<rule>` and follow the rule format below                                   |
 
 ### Rule format
 
