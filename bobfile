@@ -1,0 +1,27 @@
+include https://raw.githubusercontent.com/codemonstur/bobfiles/master/foss-lib-github-maven
+
+vendor: com.github.codemonstur
+name: maven-check-license
+version: 1.0.0
+description: A maven plugin for checking licenses of dependencies
+license:
+  name: MIT
+developer:
+  name: Jurgen Voorneveld
+  email: jegvoorneveld@gmail.com
+enablePreview: false
+packaging: maven-plugin
+dependencies:
+  - repository: org.apache.maven:maven-core:3.9.6
+    scope: provided
+  - repository: org.apache.maven:maven-plugin-api:3.9.6
+    scope: provided
+  - repository: org.apache.maven.plugin-tools:maven-plugin-annotations:3.13.1
+    scope: provided
+  - repository: org.apache.maven:maven-project:3.0-alpha-2
+    scope: provided
+  - repository: org.junit.jupiter:junit-jupiter:5.10.1
+    scope: test
+
+build
+ |  mvn clean package -DskipTests
