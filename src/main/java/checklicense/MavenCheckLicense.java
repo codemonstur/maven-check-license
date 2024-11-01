@@ -25,7 +25,7 @@ import static org.apache.maven.model.building.ModelBuildingRequest.*;
 import static org.apache.maven.plugins.annotations.LifecyclePhase.VALIDATE;
 import static org.apache.maven.plugins.annotations.ResolutionScope.COMPILE_PLUS_RUNTIME;
 
-@Mojo( defaultPhase = VALIDATE, name = "check-licenses",
+@Mojo( defaultPhase = VALIDATE, name = "check",
        requiresDependencyCollection = COMPILE_PLUS_RUNTIME,
        requiresDependencyResolution = COMPILE_PLUS_RUNTIME )
 public final class MavenCheckLicense extends AbstractMojo {
@@ -33,9 +33,9 @@ public final class MavenCheckLicense extends AbstractMojo {
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     public MavenProject project;
     @Parameter(defaultValue = "${session}", readonly = true, required = true)
-    private MavenSession session;
+    public MavenSession session;
     @Component
-    private ProjectBuilder projectBuilder;
+    public ProjectBuilder projectBuilder;
 
     @Parameter(defaultValue = "true")
     public boolean enabled;
