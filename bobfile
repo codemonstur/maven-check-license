@@ -26,3 +26,7 @@ dependencies:
 
 build
  |  mvn clean package -DskipTests
+
+update
+    mvn validate -P security
+    mvn validate -P licenses

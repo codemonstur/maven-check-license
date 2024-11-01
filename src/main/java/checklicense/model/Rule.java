@@ -30,6 +30,7 @@ public final class Rule {
     public boolean matches(final License license) {
         final var data = field == name ? license.getName() : license.getUrl();
 
+        if (data == null) return false;
         if (type == equal) return value.equals(data);
         if (type == regex) return pattern.matcher(data).matches();
 
