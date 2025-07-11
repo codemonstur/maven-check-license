@@ -3,7 +3,7 @@
 
     <groupId>com.github.codemonstur</groupId>
     <artifactId>maven-check-license</artifactId>
-    <version>1.0.1</version>
+    <version>1.1.0</version>
     <packaging>maven-plugin</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -34,7 +34,11 @@
     </developers>
 
     <properties>
+        <module.name>com.github.codemonstur.maven-check-license</module.name>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <maven.version>3.6.3</maven.version>
+
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <maven.compiler.release>17</maven.compiler.release>
@@ -42,6 +46,7 @@
         <version.library.maven>3.9.6</version.library.maven>
         <version.library.maven-annotations>3.13.1</version.library.maven-annotations>
         <version.library.junit>5.10.1</version.library.junit>
+        <version.library.mockito>5.18.0</version.library.mockito>
 
         <version.plugin.license-check>1.0.0</version.plugin.license-check>
         <version.plugin.check-cves>1.0.2</version.plugin.check-cves>
@@ -63,6 +68,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${version.plugin.surefire}</version>
+                <configuration>
+                    <argLine>-Xshare:off</argLine>
+                </configuration>
             </plugin>
 
             <plugin>
@@ -160,7 +168,12 @@
             <version>${version.library.junit}</version>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${version.library.mockito}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <profiles>

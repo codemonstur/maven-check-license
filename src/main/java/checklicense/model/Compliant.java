@@ -6,7 +6,7 @@ import org.apache.maven.model.License;
 import java.util.List;
 
 public record Compliant(String groupId, String artifactId, String version, List<License> licenses, Rule rule) {
-    public Compliant(Artifact artifact, List<License> licenses, Rule rule) {
+    public Compliant(final Artifact artifact, final List<License> licenses, final Rule rule) {
         this(artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion(), licenses, rule);
     }
 
