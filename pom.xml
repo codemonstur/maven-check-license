@@ -43,28 +43,16 @@
         <version.library.maven-annotations>3.13.1</version.library.maven-annotations>
         <version.library.junit>5.10.1</version.library.junit>
 
-        <version.plugin.gpg>1.5</version.plugin.gpg>
+        <version.plugin.license-check>1.0.0</version.plugin.license-check>
+        <version.plugin.check-cves>1.0.2</version.plugin.check-cves>
         <version.plugin.surefire>3.5.3</version.plugin.surefire>
         <version.plugin.plugin>3.13.1</version.plugin.plugin>
         <version.plugin.nexus-staging>1.7.0</version.plugin.nexus-staging>
         <version.plugin.source>3.3.0</version.plugin.source>
         <version.plugin.javadoc>3.11.2</version.plugin.javadoc>
-        <version.plugin.license-check>1.0.0</version.plugin.license-check>
-        <version.plugin.check-cves>1.0.2</version.plugin.check-cves>
+        <version.plugin.gpg>3.2.8</version.plugin.gpg>
+        <version.plugin.publish>0.8.0</version.plugin.publish>
     </properties>
-
-    <distributionManagement>
-        <snapshotRepository>
-            <id>sonatype-nexus-snapshots</id>
-            <name>Sonatype Nexus snapshot repository</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-        <repository>
-            <id>sonatype-nexus-staging</id>
-            <name>Sonatype Nexus release repository</name>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-    </distributionManagement>
 
     <build>
         <finalName>${project.artifactId}</finalName>
@@ -83,18 +71,6 @@
                 <version>${version.plugin.plugin}</version>
                 <configuration>
                     <goalPrefix>hc:</goalPrefix>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>${version.plugin.nexus-staging}</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>sonatype-nexus-staging</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
                 </configuration>
             </plugin>
 
@@ -125,6 +101,33 @@
                         <goals><goal>jar</goal></goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>${version.plugin.gpg}</version>
+                <configuration>
+                    <passphrase>${gpg.passphrase}</passphrase>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals><goal>sign</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>${version.plugin.publish}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                    <autoPublish>true</autoPublish>
+                </configuration>
             </plugin>
 
         </plugins>
@@ -206,35 +209,6 @@
                         <version>${version.plugin.check-cves}</version>
                         <executions>
                             <execution><goals><goal>check</goal></goals></execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <profile>
-            <id>release</id>
-            <activation>
-                <property>
-                    <name>release</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>${version.plugin.gpg}</version>
-                        <configuration>
-                            <passphrase>${gpg.passphrase}</passphrase>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals><goal>sign</goal></goals>
-                            </execution>
                         </executions>
                     </plugin>
                 </plugins>

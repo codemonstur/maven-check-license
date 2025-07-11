@@ -1,4 +1,5 @@
 
+[![GitHub Release](https://img.shields.io/github/release/codemonstur/maven-check-license.svg)](https://github.com/codemonstur/maven-check-license/releases)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.codemonstur/maven-check-license/badge.svg)](http://mvnrepository.com/artifact/com.github.codemonstur/maven-check-license)
 [![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
 
