@@ -5,14 +5,14 @@ import org.apache.maven.model.License;
 
 import java.util.List;
 
-public record Violation(String groupId, String artifactId, String version, List<License> licenses, Rule rule) {
-    public Violation(final Artifact artifact, final List<License> licenses, final Rule rule) {
+public record Ignored(String groupId, String artifactId, String version, List<License> licenses, Rule rule) {
+    public Ignored(final Artifact artifact, final List<License> licenses, final Rule rule) {
         this(artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion(), licenses, rule);
     }
     public String toMessage() {
         final var builder = new StringBuilder();
 
-        builder.append("License violation: ")
+        builder.append("Ignored License violation: ")
                 .append(groupId).append(":").append(artifactId).append(":").append(version)
                 .append("\n");
         for (final var license : licenses) {

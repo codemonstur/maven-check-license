@@ -11,6 +11,11 @@ By default, the plugin will fail the build for any license that is not matched b
 The purpose of the plugin is to prevent accidentally agreeing to licenses that are unacceptable.
 For example, you may not want to include GPL licensed code.
 
+In addition to the list of rules there are also two other lists that can be configured: exclusions, and ignored.
+The exclusions list will remove any listed GAV from consideration, any matching artifact will not be checked at all.
+The ignored list will move any violation to a separate 'Ignored' list. They will be reported but not be counted as 
+violations.
+
 The plugin will run during the `validate` phase.
 
 ### Example pom configuration
@@ -20,13 +25,14 @@ The plugin will run during the `validate` phase.
 <plugin>
     <groupId>com.github.codemonstur</groupId>
     <artifactId>maven-check-license</artifactId>
-    <version>1.0.1</version>
+    <version>1.1.0</version>
     <executions>
         <execution><goals><goal>check</goal></goals></execution>
     </executions>
     <configuration>
         <enabled>true</enabled> <!-- default: true -->
         <printViolations>true</printViolations> <!-- default: true -->
+        <printIgnored>true</printIgnored> <!-- default: true -->
         <printCompliant>false</printCompliant> <!-- default: false -->
         <failBuildOnViolation>true</failBuildOnViolation> <!-- default: true -->
         <checkCodeDependencies>true</checkCodeDependencies> <!-- default: true -->
@@ -44,6 +50,14 @@ The plugin will run during the `validate` phase.
             <rule>name:equal:The MIT License</rule>
             <rule>name:regex:(The )?Apache(\s|-)(Software )?(License |License, )?(Version |version )?2\.0</rule>
         </rules>
+        
+        <exclusions> <!-- default: empty list -->
+            <exclude>groupId:artifactId:version</exclude>
+        </exclusions>
+        
+        <ignored> <!-- default: empty list -->
+            <ignore>groupId:artifactId:version</ignore>
+        </ignored>
     </configuration>
 </plugin>
 ```
@@ -53,20 +67,23 @@ The plugin will run during the `validate` phase.
 
 The following settings can be used for the plugin:
 
-| config name                 | default value | description                                                                                              |
-|-----------------------------|---------------|----------------------------------------------------------------------------------------------------------|
-| enabled                     | true          | Turns the plugin on or off                                                                               |
-| printViolations             | true          | If true will print a warning in the log for each dependency that failed our rules                        |
-| printCompliant              | false         | If true will print an info message for each dependency that passed our rules                             |
-| failBuildOnViolation        | true          | If true will cause the build to fail if any dependency violates our rules                                |
-| checkCodeDependencies       | true          | If true will include all code dependencies in the pom, including transitive dependencies                 |
-| checkPluginDependencies     | false         | If true will include all plugin dependencies in the pom                                                  |
-| includeCompileDependencies  | true          | If true will include all dependencies with the compile scope                                             |                            |
-| includeRuntimeDependencies  | true          | If true will include all dependencies with the runtime scope                                             | 
-| includeProvidedDependencies | false         | If true will include all dependencies with the provided scope                                            |
-| includeTestDependencies     | false         | If true will include all dependencies with the test scope                                                |
-| strategy                    | passOnMatch   | passOnMatch makes the rules behave like a whitelist, failOnMatch makes the rules behave like a blacklist |
-| rules                       | []            | The list of rules. Use the tag `<rule>` and follow the rule format below                                   |
+| config name                 | default value | description                                                                                                      |
+|-----------------------------|---------------|------------------------------------------------------------------------------------------------------------------|
+| enabled                     | true          | Turns the plugin on or off                                                                                       |
+| printViolations             | true          | If true will print a warning in the log for each dependency that failed the rules                                |
+| printIgnored                | true          | If true will print a warning in the log for each dependency that failed the rules but was ignored as a violation |
+| printCompliant              | false         | If true will print an info message for each dependency that passed the rules                                     |
+| failBuildOnViolation        | true          | If true will cause the build to fail if any dependency violates the rules                                        |
+| checkCodeDependencies       | true          | If true will include all code dependencies in the pom, including transitive dependencies                         |
+| checkPluginDependencies     | false         | If true will include all plugin dependencies in the pom                                                          |
+| includeCompileDependencies  | true          | If true will include all dependencies with the compile scope                                                     |
+| includeRuntimeDependencies  | true          | If true will include all dependencies with the runtime scope                                                     |
+| includeProvidedDependencies | false         | If true will include all dependencies with the provided scope                                                    |
+| includeTestDependencies     | false         | If true will include all dependencies with the test scope                                                        |
+| strategy                    | passOnMatch   | passOnMatch makes the rules behave like a whitelist, failOnMatch makes the rules behave like a blacklist         |
+| rules                       | []            | The list of rules. Use the tag `<rule>` and follow the rule format below                                         |
+| exclusions                  | []            | The list of excluded artifacts. Use the tag `<exclude>` and write the GAV separated by colons                    |
+| ignored                     | []            | The list of ignored artifacts. Use the tag `<ignore>` and write the GAV separated by colons                      |
 
 ### Rule format
 

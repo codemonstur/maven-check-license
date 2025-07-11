@@ -1,9 +1,6 @@
 package checklicense;
 
-import checklicense.model.Compliant;
-import checklicense.model.Rule;
-import checklicense.model.RuleStrategy;
-import checklicense.model.Violation;
+import checklicense.model.*;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.License;
@@ -43,6 +40,8 @@ public final class MavenCheckLicense extends AbstractMojo {
     public boolean enabled;
     @Parameter(defaultValue = "true")
     public boolean printViolations;
+    @Parameter(defaultValue = "true")
+    public boolean printIgnored;
     @Parameter(defaultValue = "false")
     public boolean printCompliant;
     @Parameter(defaultValue = "true")
@@ -67,13 +66,17 @@ public final class MavenCheckLicense extends AbstractMojo {
 
     @Parameter
     public Set<String> rules;
+    @Parameter
+    public Set<String> exclusions;
+    @Parameter
+    public Set<String> ignored;
 
     public void execute() throws MojoFailureException {
         if (!enabled) return;
 
         final var log = getLog();
-        final var codeArtifacts = loadCodeDependencies();
-        final var pluginArtifacts = loadPluginDependencies();
+        final var codeArtifacts = filter(loadCodeDependencies(), exclusions);
+        final var pluginArtifacts = filter(loadPluginDependencies(), exclusions);
         final Set<Rule> parsedRules = rules == null ? emptySet() :
                 rules.stream().map(Rule::new).collect(toSet());
 
@@ -88,6 +91,7 @@ public final class MavenCheckLicense extends AbstractMojo {
 
     private boolean checkArtifacts(final Log log, final Set<Artifact> artifacts, final Set<Rule> rules) throws MojoFailureException {
         final var violations = new HashSet<Violation>();
+        final var ignored = new HashSet<Ignored>();
         final var compliant = new HashSet<Compliant>();
 
         for (final var artifact : artifacts) {
@@ -96,8 +100,12 @@ public final class MavenCheckLicense extends AbstractMojo {
 
             if ((strategy == passOnMatch && rule != null) || (strategy == failOnMatch && rule == null))
                 compliant.add(new Compliant(artifact, licenses, rule));
-            if ((strategy == passOnMatch && rule == null) || (strategy == failOnMatch && rule != null))
-                violations.add(new Violation(artifact, licenses, rule));
+            if ((strategy == passOnMatch && rule == null) || (strategy == failOnMatch && rule != null)) {
+                if (isIgnored(artifact))
+                    ignored.add(new Ignored(artifact, licenses, rule));
+                else
+                    violations.add(new Violation(artifact, licenses, rule));
+            }
         }
 
         log.info("Found " + artifacts.size() + " artifacts with " + violations.size() + " total license violation(s).");
@@ -105,6 +113,12 @@ public final class MavenCheckLicense extends AbstractMojo {
         if (printViolations && !violations.isEmpty()) {
             for (final var violation : violations) {
                 for (final var line : violation.toMessage().split("\n"))
+                    log.warn(line);
+            }
+        }
+        if (printIgnored && !ignored.isEmpty()) {
+            for (final var ignore : ignored) {
+                for (final var line : ignore.toMessage().split("\n"))
                     log.warn(line);
             }
         }
@@ -127,6 +141,13 @@ public final class MavenCheckLicense extends AbstractMojo {
 
     private Set<Artifact> loadPluginDependencies() {
         return project.getPluginArtifacts();
+    }
+
+    private static Set<Artifact> filter(final Set<Artifact> artifacts, final Set<String> exclusions) {
+        if (exclusions == null || exclusions.isEmpty()) return artifacts;
+        return artifacts.stream()
+            .filter(artifact -> !exclusions.contains(artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion()))
+            .collect(toSet());
     }
 
     private boolean selectArtifacts(final Artifact artifact) {
@@ -159,6 +180,11 @@ public final class MavenCheckLicense extends AbstractMojo {
         }
 
         return null;
+    }
+
+    private boolean isIgnored(final Artifact artifact) {
+        if (ignored == null || ignored.isEmpty()) return false;
+        return ignored.contains(artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion());
     }
 
 }
