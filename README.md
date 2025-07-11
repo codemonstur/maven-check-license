@@ -1,5 +1,4 @@
 
-[![GitHub Release](https://img.shields.io/github/release/codemonstur/maven-check-license.svg)](https://github.com/codemonstur/maven-check-license/releases) 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.codemonstur/maven-check-license/badge.svg)](http://mvnrepository.com/artifact/com.github.codemonstur/maven-check-license)
 [![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
 
@@ -22,7 +21,7 @@ The plugin will run during the `validate` phase.
     <artifactId>maven-check-license</artifactId>
     <version>1.0.0</version>
     <executions>
-        <execution><goals><goal>check-licenses</goal></goals></execution>
+        <execution><goals><goal>check</goal></goals></execution>
     </executions>
     <configuration>
         <enabled>true</enabled> <!-- default: true -->
