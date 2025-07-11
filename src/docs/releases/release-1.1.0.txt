@@ -1,0 +1,5 @@
+1.1.0
+
+Added exclusions list
+Added ignored list
+Added printIgnored boolean setting
