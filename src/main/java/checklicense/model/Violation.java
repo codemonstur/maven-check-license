@@ -2,13 +2,12 @@ package checklicense.model;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.License;
-import org.apache.maven.project.MavenProject;
 
 import java.util.List;
 
 public record Violation(String groupId, String artifactId, String version, List<License> licenses, Rule rule) {
-    public Violation(Artifact artifact, MavenProject artifactProject, Rule rule) {
-        this(artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion(), artifactProject.getLicenses(), rule);
+    public Violation(Artifact artifact, List<License> licenses, Rule rule) {
+        this(artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion(), licenses, rule);
     }
     public String toMessage() {
         final var builder = new StringBuilder();
