@@ -6,6 +6,7 @@ import checklicense.model.RuleStrategy;
 import checklicense.model.Violation;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.License;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
@@ -15,6 +16,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.*;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static checklicense.model.RuleStrategy.failOnMatch;
@@ -89,13 +91,13 @@ public final class MavenCheckLicense extends AbstractMojo {
         final var compliant = new HashSet<Compliant>();
 
         for (final var artifact : artifacts) {
-            final var artifactProject = loadProjectFor(artifact);
-            final var rule = findMatchingRule(artifactProject, rules);
+            final var licenses = loadLicensesFor(artifact);
+            final var rule = findMatchingRule(licenses, rules);
 
             if ((strategy == passOnMatch && rule != null) || (strategy == failOnMatch && rule == null))
-                compliant.add(new Compliant(artifact, artifactProject, rule));
+                compliant.add(new Compliant(artifact, licenses, rule));
             if ((strategy == passOnMatch && rule == null) || (strategy == failOnMatch && rule != null))
-                violations.add(new Violation(artifact, artifactProject, rule));
+                violations.add(new Violation(artifact, licenses, rule));
         }
 
         log.info("Found " + artifacts.size() + " artifacts with " + violations.size() + " total license violation(s).");
@@ -136,20 +138,20 @@ public final class MavenCheckLicense extends AbstractMojo {
         return true;
     }
 
-    private MavenProject loadProjectFor(final Artifact artifact) throws MojoFailureException {
+    private List<License> loadLicensesFor(final Artifact artifact) throws MojoFailureException {
         final var buildingRequest = new DefaultProjectBuildingRequest(session.getProjectBuildingRequest())
                 .setValidationLevel(VALIDATION_LEVEL_MINIMAL);
         try {
-            return projectBuilder.build(artifact, buildingRequest).getProject();
+            return projectBuilder.build(artifact, buildingRequest).getProject().getLicenses();
         } catch (final ProjectBuildingException e) {
             throw new MojoFailureException(e);
         }
     }
 
-    private static Rule findMatchingRule(final MavenProject artifactProject, final Set<Rule> rules) {
+    private static Rule findMatchingRule(final List<License> licenses, final Set<Rule> rules) {
         if (rules == null || rules.isEmpty()) return null;
 
-        for (final var license : artifactProject.getLicenses()) {
+        for (final var license : licenses) {
             for (final var rule : rules) {
                 if (rule.matches(license))
                     return rule;

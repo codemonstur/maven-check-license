@@ -2,7 +2,7 @@ include https://raw.githubusercontent.com/codemonstur/bobfiles/master/foss-lib-g
 
 vendor: com.github.codemonstur
 name: maven-check-license
-version: 1.0.0
+version: 1.0.1
 release: 17
 description: A maven plugin for checking licenses of dependencies
 license:
@@ -28,5 +28,5 @@ build
  |  mvn clean package -DskipTests
 
 update
-    mvn validate -P security
-    mvn validate -P licenses
+ |  mvn validate -P security
+ |  mvn validate -P licenses
