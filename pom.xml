@@ -3,7 +3,7 @@
 
     <groupId>com.github.codemonstur</groupId>
     <artifactId>maven-check-license</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <packaging>maven-plugin</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -46,17 +46,17 @@
         <version.library.maven>3.9.6</version.library.maven>
         <version.library.maven-annotations>3.13.1</version.library.maven-annotations>
         <version.library.junit>5.10.1</version.library.junit>
-        <version.library.mockito>5.18.0</version.library.mockito>
+        <version.library.mockito>5.23.0</version.library.mockito>
 
         <version.plugin.license-check>1.0.0</version.plugin.license-check>
         <version.plugin.check-cves>1.0.2</version.plugin.check-cves>
-        <version.plugin.surefire>3.5.3</version.plugin.surefire>
+        <version.plugin.surefire>3.5.5</version.plugin.surefire>
         <version.plugin.plugin>3.13.1</version.plugin.plugin>
         <version.plugin.nexus-staging>1.7.0</version.plugin.nexus-staging>
         <version.plugin.source>3.3.0</version.plugin.source>
-        <version.plugin.javadoc>3.11.2</version.plugin.javadoc>
+        <version.plugin.javadoc>3.12.0</version.plugin.javadoc>
         <version.plugin.gpg>3.2.8</version.plugin.gpg>
-        <version.plugin.publish>0.8.0</version.plugin.publish>
+        <version.plugin.publish>0.10.0</version.plugin.publish>
     </properties>
 
     <build>
