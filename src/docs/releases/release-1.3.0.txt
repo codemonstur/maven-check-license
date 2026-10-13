@@ -1,0 +1,18 @@
+1.3.0
+
+Exclusions and ignored patterns now support wildcards ('*' and '?') and maven version ranges instead of only exact GAVs
+Added exclusionsFile setting, a file with one exclusion pattern per line ('#' starts a comment)
+Added ignoredFile setting, a file with one ignored pattern per line ('#' starts a comment)
+Added the system properties checklicense.exclusions and checklicense.ignored for patterns from the command line
+Added includeSystemDependencies setting
+Warn about exclusion and ignore patterns that do not match anything
+Ignored violations now report which pattern matched them and where the pattern came from
+Dependencies without license information are now a violation for both strategies
+Unreadable poms (a system scoped dependency for example) are now logged as a warning and treated as having no license information, instead of failing the build
+Invalid rules and patterns now fail with a clear error message
+Dependency resolution raised to test scope so includeTestDependencies works
+Fixed NPEs when a project has no resolved artifacts or plugin dependencies
+Fixed goal prefix 'hc:' to 'hc'
+Better log output: a summary line per check, and violations report missing license information
+Added unit tests
+Documented the pattern format in the readme
