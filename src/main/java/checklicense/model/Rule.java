@@ -2,12 +2,15 @@ package checklicense.model;
 
 import org.apache.maven.model.License;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import static checklicense.model.MatchField.name;
-import static checklicense.model.MatchType.regex;
 import static checklicense.model.MatchType.equal;
+import static checklicense.model.MatchType.regex;
+import static java.util.stream.Collectors.joining;
 
 public final class Rule {
 
@@ -21,10 +24,42 @@ public final class Rule {
     public Rule(final String rule) {
         this.rule = rule;
         final var parts = rule.split(":", 3);
-        this.field = MatchField.valueOf(parts[0]);
-        this.type = MatchType.valueOf(parts[1]);
+        if (parts.length != 3)
+            throw new IllegalArgumentException("expected the format <field>:<type>:<value>");
+        this.field = parseField(parts[0]);
+        this.type = parseType(parts[1]);
         this.value = type == equal ? parts[2] : null;
-        this.pattern = type == regex ? Pattern.compile(parts[2]) : null;
+        this.pattern = type == regex ? compile(parts[2]) : null;
+    }
+
+    private static MatchField parseField(final String field) {
+        try {
+            return MatchField.valueOf(field);
+        } catch (final IllegalArgumentException e) {
+            throw new IllegalArgumentException("unknown field '" + field + "', expected one of ["
+                    + values(MatchField.values()) + "]");
+        }
+    }
+
+    private static MatchType parseType(final String type) {
+        try {
+            return MatchType.valueOf(type);
+        } catch (final IllegalArgumentException e) {
+            throw new IllegalArgumentException("unknown type '" + type + "', expected one of ["
+                    + values(MatchType.values()) + "]");
+        }
+    }
+
+    private static Pattern compile(final String regex) {
+        try {
+            return Pattern.compile(regex);
+        } catch (final PatternSyntaxException e) {
+            throw new IllegalArgumentException("invalid regex '" + regex + "', " + e.getDescription());
+        }
+    }
+
+    private static String values(final Enum<?>... constants) {
+        return Arrays.stream(constants).map(Enum::name).collect(joining(", "));
     }
 
     public boolean matches(final License license) {

@@ -1,7 +1,7 @@
 
-[![GitHub Release](https://img.shields.io/github/release/codemonstur/maven-check-license.svg)](https://github.com/codemonstur/maven-check-license/releases)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.codemonstur/maven-check-license/badge.svg)](http://mvnrepository.com/artifact/com.github.codemonstur/maven-check-license)
-[![MIT Licence](https://badges.frapsoft.com/os/mit/mit.svg?v=103)](https://opensource.org/licenses/mit-license.php)
+[![GitHub Release](https://img.shields.io/github/v/release/codemonstur/maven-check-license.svg)](https://github.com/codemonstur/maven-check-license/releases)
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.codemonstur/maven-check-license.svg)](https://central.sonatype.com/artifact/com.github.codemonstur/maven-check-license)
+[![MIT Licence](https://img.shields.io/github/license/codemonstur/maven-check-license.svg)](LICENSE)
 
 ## Maven-check-license
 
@@ -12,9 +12,16 @@ The purpose of the plugin is to prevent accidentally agreeing to licenses that a
 For example, you may not want to include GPL licensed code.
 
 In addition to the list of rules there are also two other lists that can be configured: exclusions, and ignored.
-The exclusions list will remove any listed GAV from consideration, any matching artifact will not be checked at all.
+The exclusions list will remove any matching artifact from consideration, any matching artifact will not be checked
+at all.
 The ignored list will move any violation to a separate 'Ignored' list. They will be reported but not be counted as 
 violations.
+Both lists accept artifact patterns, see the pattern format below.
+
+Dependencies without any license information are always reported as a violation, for both strategies: an unknown
+license can never be proven acceptable. That includes poms without a `<licenses>` section, and poms that cannot be
+read at all (a system scoped dependency for example). A pom that cannot be read is logged as a warning and treated
+as having no license information.
 
 The plugin will run during the `validate` phase.
 
@@ -25,7 +32,7 @@ The plugin will run during the `validate` phase.
 <plugin>
     <groupId>com.github.codemonstur</groupId>
     <artifactId>maven-check-license</artifactId>
-    <version>1.1.0</version>
+    <version>1.3.0</version>
     <executions>
         <execution><goals><goal>check</goal></goals></execution>
     </executions>
@@ -41,6 +48,7 @@ The plugin will run during the `validate` phase.
         <includeRuntimeDependencies>true</includeRuntimeDependencies> <!-- default: true -->
         <includeProvidedDependencies>false</includeProvidedDependencies> <!-- default: false -->
         <includeTestDependencies>false</includeTestDependencies> <!-- default: false -->
+        <includeSystemDependencies>false</includeSystemDependencies> <!-- default: false -->
         <strategy>passOnMatch</strategy> <!-- default: passOnMatch, values: [ passOnMatch, failOnMatch ] -->
 
         <rules> <!-- default: empty list -->
@@ -53,11 +61,17 @@ The plugin will run during the `validate` phase.
         
         <exclusions> <!-- default: empty list -->
             <exclude>groupId:artifactId:version</exclude>
+            <exclude>org.example.*:*</exclude> <!-- any artifact in the org.example namespace -->
         </exclusions>
         
         <ignored> <!-- default: empty list -->
             <ignore>groupId:artifactId:version</ignore>
+            <ignore>org.apache.commons:commons-lang3:[3.0,4.0)</ignore> <!-- any 3.x release -->
         </ignored>
+
+        <!-- optional, files with one pattern per line, '#' starts a comment -->
+        <exclusionsFile>${project.basedir}/config/license-exclusions.txt</exclusionsFile>
+        <ignoredFile>${project.basedir}/config/license-ignores.txt</ignoredFile>
     </configuration>
 </plugin>
 ```
@@ -80,10 +94,13 @@ The following settings can be used for the plugin:
 | includeRuntimeDependencies  | true          | If true will include all dependencies with the runtime scope                                                     |
 | includeProvidedDependencies | false         | If true will include all dependencies with the provided scope                                                    |
 | includeTestDependencies     | false         | If true will include all dependencies with the test scope                                                        |
+| includeSystemDependencies   | false         | If true will include all dependencies with the system scope                                                      |
 | strategy                    | passOnMatch   | passOnMatch makes the rules behave like a whitelist, failOnMatch makes the rules behave like a blacklist         |
 | rules                       | []            | The list of rules. Use the tag `<rule>` and follow the rule format below                                         |
-| exclusions                  | []            | The list of excluded artifacts. Use the tag `<exclude>` and write the GAV separated by colons                    |
-| ignored                     | []            | The list of ignored artifacts. Use the tag `<ignore>` and write the GAV separated by colons                      |
+| exclusions                  | []            | The list of excluded artifacts. Use the tag `<exclude>` and write a pattern, see the pattern format below       |
+| ignored                     | []            | The list of ignored artifacts. Use the tag `<ignore>` and write a pattern, see the pattern format below         |
+| exclusionsFile              | none          | Optional file with one exclusion pattern per line, '#' starts a comment                                         |
+| ignoredFile                 | none          | Optional file with one ignored pattern per line, '#' starts a comment                                           |
 
 ### Rule format
 
@@ -96,3 +113,43 @@ The field can be one of `name` or `url`, which will make the plugin compare eith
 The type can be one of `equal` or `regex`, which will make the plugin either compare for a direct equality match or a regular expression match.
 
 The value is either the string to match with or the regular expression to match with depending on what was chosen for the type.
+A regex must match the whole license name or url, not just a part of it: `name:regex:Apache` does not match
+`The Apache Software License, Version 2.0`, you need something like `name:regex:.*Apache.*` for that.
+
+### Pattern format
+
+The `exclusions` and `ignored` lists (and the optional files) use artifact patterns:
+
+    <groupId>:<artifactId>[:<version>]
+
+Every field supports the wildcards `*` (any number of characters) and `?` (a single character), and the version
+field additionally supports maven version ranges. Omitting the version, or using `*`, matches any version.
+
+| pattern                                        | matches                                                                    |
+|------------------------------------------------|----------------------------------------------------------------------------|
+| `com.google.guava:guava:30.1-jre`              | exactly that artifact and version                                          |
+| `com.google.guava:guava`                       | any version of that artifact                                               |
+| `com.google.guava:*`                           | any artifact of that group, any version                                    |
+| `org.slf4j:*:1.7.*`                            | the 1.7.x releases of any slf4j artifact                                   |
+| `com.google.*:*:*`                             | everything in the com.google namespace                                     |
+| `org.apache.commons:commons-lang3:[3.0,4.0)`   | the 3.x releases (maven version range, `[3.0,)` and `1.0+` also work)      |
+
+A pattern that matches nothing is reported as a warning, so that stale entries are noticed after a version bump.
+The same warning is printed for an ignored pattern that never suppressed a violation. The warnings are skipped
+when no artifacts were examined at all, for example when both `checkCodeDependencies` and
+`checkPluginDependencies` are false. Ignored violations name the pattern that matched them:
+
+    [WARNING] Ignored License violation: com.example:demo:1.2 (matched 'com.example.*:*' from the configuration)
+
+Patterns can also come from two other places, next to the pom configuration:
+
+* a file, with `<exclusionsFile>` and `<ignoredFile>`: one pattern per line, blank lines and lines starting with
+  `#` are skipped. Useful for a list that is shared between projects.
+* the command line, with `-Dchecklicense.exclusions=...` and `-Dchecklicense.ignored=...`: a comma separated list
+  of patterns that is added to the configured ones, for example to ignore a dependency during an investigation
+  without editing the pom. Commas inside a version range do not split the list, so
+  `-Dchecklicense.ignored=org.apache.commons:commons-lang3:[3.0,4.0),com.example:demo:*` works as expected.
+
+The source of each pattern is printed with the warnings above: `the configuration`, the path of the file it came
+from, or the name of the system property for command line patterns (`'checklicense.exclusions'` or
+`'checklicense.ignored'`).

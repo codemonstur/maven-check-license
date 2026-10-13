@@ -11,7 +11,13 @@ public record Compliant(String groupId, String artifactId, String version, List<
     }
 
     public String toMessage() {
-        return "License for " + groupId + ":" + artifactId + ":" + version + " matches rule '" + rule + "'";
+        return rule == null
+                ? "License for " + gav() + " matches no rule"
+                : "License for " + gav() + " matches rule '" + rule + "'";
+    }
+
+    private String gav() {
+        return groupId + ":" + artifactId + ":" + version;
     }
 
 }
