@@ -36,6 +36,8 @@
     <properties>
         <module.name>com.github.codemonstur.maven-check-license</module.name>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- default for @{argLine}; jacoco's prepare-agent appends the agent when it runs -->
+        <argLine></argLine>
 
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
@@ -78,7 +80,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${version.plugin.surefire}</version>
                 <configuration>
-                    <argLine>-Xshare:off -javaagent:${org.mockito:mockito-core:jar}</argLine>
+                    <argLine>@{argLine} -Xshare:off -javaagent:${org.mockito:mockito-core:jar}</argLine>
                 </configuration>
             </plugin>
 
