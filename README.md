@@ -42,6 +42,7 @@ The plugin will run during the `validate` phase.
         <printIgnored>true</printIgnored> <!-- default: true -->
         <printCompliant>false</printCompliant> <!-- default: false -->
         <failBuildOnViolation>true</failBuildOnViolation> <!-- default: true -->
+        <warnUnmatchedRules>true</warnUnmatchedRules> <!-- default: true -->
         <checkCodeDependencies>true</checkCodeDependencies> <!-- default: true -->
         <checkPluginDependencies>false</checkPluginDependencies> <!-- default: false -->
         <includeCompileDependencies>true</includeCompileDependencies> <!-- default: true -->
@@ -88,6 +89,7 @@ The following settings can be used for the plugin:
 | printIgnored                | true          | If true will print a warning in the log for each dependency that failed the rules but was ignored as a violation |
 | printCompliant              | false         | If true will print an info message for each dependency that passed the rules                                     |
 | failBuildOnViolation        | true          | If true will cause the build to fail if any dependency violates the rules                                        |
+| warnUnmatchedRules          | true          | If true will print a warning in the log for each rule that did not match any artifact                            |
 | checkCodeDependencies       | true          | If true will include all code dependencies in the pom, including transitive dependencies                         |
 | checkPluginDependencies     | false         | If true will include all plugin dependencies in the pom                                                          |
 | includeCompileDependencies  | true          | If true will include all dependencies with the compile scope                                                     |

@@ -265,6 +265,46 @@ public class MavenCheckLicenseTest {
     }
 
     @Test
+    public void rulesThatMatchNothingAreReported() throws Exception {
+        givenArtifact("com.example", "demo", "1.0", MIT);
+
+        final var mojo = mojo();
+        mojo.rules = Set.of("name:equal:The MIT License", "name:equal:Nonexistent License");
+
+        mojo.execute();
+
+        assertTrue(messages.contains("The rule 'name:equal:Nonexistent License' from the configuration"
+                + " did not match any artifact"));
+        assertTrue(messages.stream().noneMatch(message -> message
+                .startsWith("The rule 'name:equal:The MIT License'")));
+    }
+
+    @Test
+    public void unmatchedRuleWarningsCanBeDisabled() throws Exception {
+        givenArtifact("com.example", "demo", "1.0", MIT);
+
+        final var mojo = mojo();
+        mojo.warnUnmatchedRules = false;
+        mojo.rules = Set.of("name:equal:The MIT License", "name:equal:Nonexistent License");
+
+        mojo.execute();
+
+        assertTrue(messages.stream().noneMatch(message -> message.startsWith("The rule ")));
+    }
+
+    @Test
+    public void rulesMatchingTheSameLicenseAreBothCountedAsMatched() throws Exception {
+        givenArtifact("com.example", "demo", "1.0", MIT);
+
+        final var mojo = mojo();
+        mojo.rules = Set.of("name:equal:The MIT License", "name:regex:The MIT.*");
+
+        mojo.execute();
+
+        assertTrue(messages.stream().noneMatch(message -> message.startsWith("The rule ")));
+    }
+
+    @Test
     public void projectsWithoutAnyArtifactSetsAreSupported() throws Exception {
         final var mojo = new MavenCheckLicense();
         mojo.project = new MavenProject();
@@ -526,6 +566,7 @@ public class MavenCheckLicenseTest {
         mojo.printIgnored = true;
         mojo.printCompliant = false;
         mojo.failBuildOnViolation = true;
+        mojo.warnUnmatchedRules = true;
         mojo.checkCodeDependencies = true;
         mojo.checkPluginDependencies = false;
         mojo.includeCompileDependencies = true;

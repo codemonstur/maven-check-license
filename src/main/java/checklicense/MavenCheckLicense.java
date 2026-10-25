@@ -52,6 +52,9 @@ public final class MavenCheckLicense extends AbstractMojo {
     public boolean printCompliant;
     @Parameter(defaultValue = "true")
     public boolean failBuildOnViolation;
+    /** Warns in the log for every configured rule that did not match any checked artifact. */
+    @Parameter(defaultValue = "true")
+    public boolean warnUnmatchedRules;
 
     @Parameter(defaultValue = "true")
     public boolean checkCodeDependencies;
@@ -100,14 +103,17 @@ public final class MavenCheckLicense extends AbstractMojo {
         final var examined = codeArtifacts.size() + pluginArtifacts.size();
 
         final var matchedExclusions = new HashSet<GavPattern>();
+        final var matchedIgnored = new HashSet<GavPattern>();
+        final var matchedRules = new HashSet<Rule>();
+
         final var checkedCodeArtifacts = filter(codeArtifacts, parsedExclusions, matchedExclusions);
         final var checkedPluginArtifacts = filter(pluginArtifacts, parsedExclusions, matchedExclusions);
 
-        final var matchedIgnored = new HashSet<GavPattern>();
         boolean hasFailed = false;
-        hasFailed |= checkArtifacts(log, checkedCodeArtifacts, parsedRules, parsedIgnored, matchedIgnored);
-        hasFailed |= checkArtifacts(log, checkedPluginArtifacts, parsedRules, parsedIgnored, matchedIgnored);
+        hasFailed |= checkArtifacts(log, checkedCodeArtifacts, parsedRules, parsedIgnored, matchedIgnored, matchedRules);
+        hasFailed |= checkArtifacts(log, checkedPluginArtifacts, parsedRules, parsedIgnored, matchedIgnored, matchedRules);
 
+        if (warnUnmatchedRules) warnUnusedRules(log, parsedRules, matchedRules, examined);
         warnUnusedPatterns(log, "exclusions", parsedExclusions, matchedExclusions, examined, "artifact");
         warnUnusedPatterns(log, "ignored", parsedIgnored, matchedIgnored, examined, "violation");
 
@@ -205,6 +211,16 @@ public final class MavenCheckLicense extends AbstractMojo {
         return patterns.stream().filter(p -> !p.isEmpty()).toList();
     }
 
+    private static void warnUnusedRules(final Log log, final Set<Rule> rules, final Set<Rule> matched,
+                                        final int examined) {
+        if (examined == 0) return;
+
+        for (final var rule : rules) {
+            if (!matched.contains(rule))
+                log.warn("The rule '" + rule + "' from the configuration did not match any artifact");
+        }
+    }
+
     private static void warnUnusedPatterns(final Log log, final String what, final Set<GavPattern> patterns,
                                            final Set<GavPattern> matched, final int examined, final String target) {
         if (examined == 0) return;
@@ -217,14 +233,15 @@ public final class MavenCheckLicense extends AbstractMojo {
     }
 
     private boolean checkArtifacts(final Log log, final Set<Artifact> artifacts, final Set<Rule> rules,
-                                   final Set<GavPattern> ignoredPatterns, final Set<GavPattern> matchedIgnored) {
+                                   final Set<GavPattern> ignoredPatterns, final Set<GavPattern> matchedIgnored,
+                                   final Set<Rule> matchedRules) {
         final var violations = new HashSet<Violation>();
         final var ignoredViolations = new HashSet<Ignored>();
         final var compliant = new HashSet<Compliant>();
 
         for (final var artifact : artifacts) {
             final var licenses = loadLicensesFor(artifact);
-            final var rule = findMatchingRule(licenses, rules);
+            final var rule = findMatchingRule(licenses, rules, matchedRules);
 
             if (isViolation(licenses, rule)) {
                 final var ignorePattern = findMatch(artifact, ignoredPatterns);
@@ -337,17 +354,25 @@ public final class MavenCheckLicense extends AbstractMojo {
         }
     }
 
-    private static Rule findMatchingRule(final List<License> licenses, final Set<Rule> rules) {
+    /**
+     * Records every rule that matches one of the licenses, so a rule that does match an artifact is never
+     * reported as unused just because another rule won for the same license. Returns the first match in
+     * license then rule order, which is the rule that decides whether the artifact passes.
+     */
+    private static Rule findMatchingRule(final List<License> licenses, final Set<Rule> rules,
+                                         final Set<Rule> matchedRules) {
         if (rules == null || rules.isEmpty() || licenses.isEmpty()) return null;
 
+        Rule first = null;
         for (final var license : licenses) {
             for (final var rule : rules) {
-                if (rule.matches(license))
-                    return rule;
+                if (rule.matches(license)) {
+                    matchedRules.add(rule);
+                    if (first == null) first = rule;
+                }
             }
         }
-
-        return null;
+        return first;
     }
 
     private static String values(final Enum<?>... constants) {
