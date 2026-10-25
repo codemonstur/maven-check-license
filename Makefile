@@ -35,7 +35,7 @@ coverage: ## Run tests and generate a jacoco coverage report
 	printf '%s\n' "$$output" | while IFS= read -r line; do $(INFO) "$$line"; done
 
 validate: ## Check dependency versions, cves, licenses, and code quality
-	@mvn versions:display-dependency-updates
+	@mvn versions:display-dependency-updates "-Dmaven.version.ignore=(?i).*(alpha|beta|rc|-m[0-9]+|snapshot).*"
 	@mvn versions:display-plugin-updates
 	@mvn validate -P vulnerabilities
 	@mvn validate -P licenses
