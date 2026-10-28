@@ -51,19 +51,19 @@ release-notes: ## Write release notes in src/docs/releases for the current versi
 
 deploy: ## Clean, build and deploy a version to Github and Maven Central
 	@$(INFO) "Installing core (needed to build the plugin)"
-	@mvn -pl check-license-core clean deploy
+	@mvn -pl core clean deploy
 	@$(INFO) "Uploading maven-plugin to maven central"
-	@mvn -pl check-license-maven-plugin clean deploy
+	@mvn -pl maven-plugin clean deploy
 	@$(INFO) "Building bobplugin for github release"
-	@mvn -pl check-license-bobplugin package
+	@mvn -pl bobplugin package
 	@$(INFO) "Creating github release"
 	@gh release create $(NAME)-$(VERSION) \
-		check-license-maven-plugin/target/maven-check-license-$(VERSION).jar \
-		check-license-maven-plugin/target/maven-check-license-$(VERSION)-javadoc.jar \
-		check-license-maven-plugin/target/maven-check-license-$(VERSION)-sources.jar \
-		check-license-bobplugin/target/check-license-bobplugin.jar \
-		check-license-bobplugin/target/check-license-bobplugin-$(VERSION)-javadoc.jar \
-		check-license-bobplugin/target/check-license-bobplugin-$(VERSION)-sources.jar \
+		maven-plugin/target/maven-check-license-$(VERSION).jar \
+		maven-plugin/target/maven-check-license-$(VERSION)-javadoc.jar \
+		maven-plugin/target/maven-check-license-$(VERSION)-sources.jar \
+		bobplugin/target/check-license-bobplugin.jar \
+		bobplugin/target/check-license-bobplugin-$(VERSION)-javadoc.jar \
+		bobplugin/target/check-license-bobplugin-$(VERSION)-sources.jar \
 		-F src/docs/releases/release-$(VERSION).txt
 	@$(INFO) "Tagging and pushing to github"
 	@git tag $(NAME)-$(VERSION)
