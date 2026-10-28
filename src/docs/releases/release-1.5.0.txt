@@ -1,0 +1,12 @@
+1.5.0
+
+Changes since maven-check-license-1.3.0:
+- Make license checking multi-module aware
+- Multi-module support
+- Updated maven config, build fixes, updated versions, pom cleanup
+- Build fixes, added docs, added warnRuleUnused
+- Create the release notes directory before writing the release notes
+- chore: commit pending local changes
+- chore: commit pending local changes
+- Add make coverage target and compose the JaCoCo agent into surefire's argLine
+- Harmonized the build files
