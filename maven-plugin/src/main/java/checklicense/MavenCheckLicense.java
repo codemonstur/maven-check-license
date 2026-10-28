@@ -6,7 +6,6 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.License;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -22,7 +21,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import static checklicense.model.RuleStrategy.passOnMatch;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.joining;
@@ -100,26 +98,29 @@ public final class MavenCheckLicense extends AbstractMojo {
 
         final Set<Artifact> codeArtifacts = checkCodeDependencies ? loadCodeDependencies() : Set.of();
         final Set<Artifact> pluginArtifacts = checkPluginDependencies ? loadPluginDependencies() : Set.of();
-        final var examined = codeArtifacts.size() + pluginArtifacts.size();
 
-        final var matchedExclusions = new HashSet<GavPattern>();
-        final var matchedIgnored = new HashSet<GavPattern>();
-        final var matchedRules = new HashSet<Rule>();
+        final var codeDependencies = toCheckedDependencies(codeArtifacts);
+        final var pluginDependencies = toCheckedDependencies(pluginArtifacts);
 
-        final var checkedCodeArtifacts = filter(codeArtifacts, parsedExclusions, matchedExclusions);
-        final var checkedPluginArtifacts = filter(pluginArtifacts, parsedExclusions, matchedExclusions);
-
-        boolean hasFailed = false;
-        hasFailed |= checkArtifacts(log, checkedCodeArtifacts, parsedRules, parsedIgnored, matchedIgnored, matchedRules);
-        hasFailed |= checkArtifacts(log, checkedPluginArtifacts, parsedRules, parsedIgnored, matchedIgnored, matchedRules);
-
-        if (warnUnmatchedRules) warnUnusedRules(log, parsedRules, matchedRules, examined);
-        warnUnusedPatterns(log, "exclusions", parsedExclusions, matchedExclusions, examined, "artifact");
-        warnUnusedPatterns(log, "ignored", parsedIgnored, matchedIgnored, examined, "violation");
+        final boolean hasFailed = LicenseChecker.checkAll(codeDependencies, pluginDependencies, parsedRules,
+                parsedExclusions, parsedIgnored, strategy, warnUnmatchedRules, printViolations, printIgnored,
+                printCompliant, new MavenLogger(log));
 
         if (failBuildOnViolation && hasFailed) {
             throw new MojoFailureException("Violations found");
         }
+    }
+
+    private List<CheckedDependency> toCheckedDependencies(final Set<Artifact> artifacts) {
+        final var result = new ArrayList<CheckedDependency>();
+        for (final var artifact : artifacts) {
+            final var licenses = loadLicensesFor(artifact).stream()
+                    .map(license -> new checklicense.model.License(license.getName(), license.getUrl()))
+                    .toList();
+            result.add(new MavenCheckedDependency(artifact.getGroupId(), artifact.getArtifactId(),
+                    artifact.getVersion(), licenses));
+        }
+        return result;
     }
 
     private Set<Rule> parseRules() throws MojoFailureException {
@@ -192,7 +193,7 @@ public final class MavenCheckLicense extends AbstractMojo {
      * Splits a comma separated list of patterns. Commas inside a version range like '[1.0,2.0)' do not split,
      * because they are inside brackets.
      */
-    static List<String> splitPatterns(final String value) {
+    public static List<String> splitPatterns(final String value) {
         final var patterns = new ArrayList<String>();
         final var pattern = new StringBuilder();
         var depth = 0;
@@ -211,124 +212,58 @@ public final class MavenCheckLicense extends AbstractMojo {
         return patterns.stream().filter(p -> !p.isEmpty()).toList();
     }
 
-    private static void warnUnusedRules(final Log log, final Set<Rule> rules, final Set<Rule> matched,
-                                        final int examined) {
-        if (examined == 0) return;
-
-        for (final var rule : rules) {
-            if (!matched.contains(rule))
-                log.warn("The rule '" + rule + "' from the configuration did not match any artifact");
-        }
-    }
-
-    private static void warnUnusedPatterns(final Log log, final String what, final Set<GavPattern> patterns,
-                                           final Set<GavPattern> matched, final int examined, final String target) {
-        if (examined == 0) return;
-
-        for (final var pattern : patterns) {
-            if (!matched.contains(pattern))
-                log.warn("The " + what + " pattern '" + pattern + "' from " + pattern.source()
-                        + " did not match any " + target);
-        }
-    }
-
-    private boolean checkArtifacts(final Log log, final Set<Artifact> artifacts, final Set<Rule> rules,
-                                   final Set<GavPattern> ignoredPatterns, final Set<GavPattern> matchedIgnored,
-                                   final Set<Rule> matchedRules) {
-        final var violations = new HashSet<Violation>();
-        final var ignoredViolations = new HashSet<Ignored>();
-        final var compliant = new HashSet<Compliant>();
-
-        for (final var artifact : artifacts) {
-            final var licenses = loadLicensesFor(artifact);
-            final var rule = findMatchingRule(licenses, rules, matchedRules);
-
-            if (isViolation(licenses, rule)) {
-                final var ignorePattern = findMatch(artifact, ignoredPatterns);
-                if (ignorePattern != null) {
-                    matchedIgnored.add(ignorePattern);
-                    ignoredViolations.add(new Ignored(artifact, licenses, rule, ignorePattern));
-                } else {
-                    violations.add(new Violation(artifact, licenses, rule));
-                }
-            } else {
-                compliant.add(new Compliant(artifact, licenses, rule));
-            }
-        }
-
-        if (!artifacts.isEmpty())
-            log.info("Checked " + artifacts.size() + " artifact(s), found " + violations.size()
-                    + " license violation(s) and " + ignoredViolations.size() + " ignored violation(s).");
-
-        if (printViolations && !violations.isEmpty()) {
-            for (final var violation : violations) {
-                for (final var line : violation.toMessage().split("\n"))
-                    log.warn(line);
-            }
-        }
-        if (printIgnored && !ignoredViolations.isEmpty()) {
-            for (final var ignore : ignoredViolations) {
-                for (final var line : ignore.toMessage().split("\n"))
-                    log.warn(line);
-            }
-        }
-        if (printCompliant && !compliant.isEmpty()) {
-            for (final var license : compliant) {
-                for (final var line : license.toMessage().split("\n"))
-                    log.info(line);
-            }
-        }
-
-        return !violations.isEmpty();
-    }
-
-    /**
-     * An artifact is a violation when it does not match a rule (whitelist strategy), when it matches a rule
-     * (blacklist strategy), or when no license information is available at all: an unknown license can never
-     * be proven acceptable, so it is a violation for both strategies.
-     */
-    private boolean isViolation(final List<License> licenses, final Rule rule) {
-        if (licenses.isEmpty()) return true;
-        return strategy == passOnMatch ? rule == null : rule != null;
-    }
-
     private Set<Artifact> loadCodeDependencies() {
-        final var set = new HashSet<Artifact>();
-        final var artifacts = project.getArtifacts();
-        if (artifacts != null) set.addAll(artifacts);
-        // The resolved artifacts contain the transitive dependencies, the dependency artifacts contain the
-        // direct dependencies as declared in the pom (these can carry information the resolved set does not)
-        final var dependencyArtifacts = project.getDependencyArtifacts();
-        if (dependencyArtifacts != null) set.addAll(dependencyArtifacts);
-        return set.stream().filter(this::selectArtifacts).collect(toSet());
+        // Multi-module builds are aggregated: every module in the reactor/collected project set is inspected,
+        // and artifacts are deduplicated by their coordinates so a shared dependency is only checked once.
+        final var artifacts = new ArrayList<Artifact>();
+        for (final var moduleProject : projectsToCheck()) {
+            final var resolvedArtifacts = moduleProject.getArtifacts();
+            if (resolvedArtifacts != null) artifacts.addAll(resolvedArtifacts);
+            // The resolved artifacts contain the transitive dependencies, the dependency artifacts contain the
+            // direct dependencies as declared in the pom (these can carry information the resolved set does not)
+            final var dependencyArtifacts = moduleProject.getDependencyArtifacts();
+            if (dependencyArtifacts != null) artifacts.addAll(dependencyArtifacts);
+        }
+
+        final var seen = new HashSet<String>();
+        final var result = new LinkedHashSet<Artifact>();
+        for (final var artifact : artifacts) {
+            if (!selectArtifacts(artifact)) continue;
+            final var key = artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion();
+            if (seen.add(key)) result.add(artifact);
+        }
+        return result;
     }
 
     private Set<Artifact> loadPluginDependencies() {
-        final var pluginArtifacts = project.getPluginArtifacts();
-        return pluginArtifacts == null ? emptySet() : pluginArtifacts;
-    }
+        final var artifacts = new ArrayList<Artifact>();
+        for (final var moduleProject : projectsToCheck()) {
+            final var pluginArtifacts = moduleProject.getPluginArtifacts();
+            if (pluginArtifacts != null) artifacts.addAll(pluginArtifacts);
+        }
 
-    static Set<Artifact> filter(final Set<Artifact> artifacts, final Set<GavPattern> exclusions,
-                                final Set<GavPattern> matched) {
-        if (exclusions.isEmpty()) return artifacts;
-
-        final var filtered = new HashSet<Artifact>();
+        final var seen = new HashSet<String>();
+        final var result = new LinkedHashSet<Artifact>();
         for (final var artifact : artifacts) {
-            final var pattern = findMatch(artifact, exclusions);
-            if (pattern == null) filtered.add(artifact);
-            else matched.add(pattern);
+            final var key = artifact.getGroupId() + ":" + artifact.getArtifactId() + ":" + artifact.getVersion();
+            if (seen.add(key)) result.add(artifact);
         }
-        return filtered;
+        return result;
     }
 
-    static GavPattern findMatch(final Artifact artifact, final Set<GavPattern> patterns) {
-        for (final var pattern : patterns) {
-            if (pattern.matches(artifact)) return pattern;
+    /**
+     * Returns the set of projects whose dependencies should be checked. In a multi-module build this is the
+     * collected/reactor project set; for a single module it is just the current project.
+     */
+    private List<MavenProject> projectsToCheck() {
+        final var collectedProjects = project.getCollectedProjects();
+        if (collectedProjects != null && !collectedProjects.isEmpty()) {
+            return collectedProjects;
         }
-        return null;
+        return List.of(project);
     }
 
-    boolean selectArtifacts(final Artifact artifact) {
+    public boolean selectArtifacts(final Artifact artifact) {
         final var scope = artifact.getScope();
         if ("compile".equalsIgnoreCase(scope)) return includeCompileDependencies;
         if ("runtime".equalsIgnoreCase(scope)) return includeRuntimeDependencies;
@@ -354,29 +289,48 @@ public final class MavenCheckLicense extends AbstractMojo {
         }
     }
 
-    /**
-     * Records every rule that matches one of the licenses, so a rule that does match an artifact is never
-     * reported as unused just because another rule won for the same license. Returns the first match in
-     * license then rule order, which is the rule that decides whether the artifact passes.
-     */
-    private static Rule findMatchingRule(final List<License> licenses, final Set<Rule> rules,
-                                         final Set<Rule> matchedRules) {
-        if (rules == null || rules.isEmpty() || licenses.isEmpty()) return null;
+    public static Set<Artifact> filter(final Set<Artifact> artifacts, final Set<GavPattern> exclusions,
+                                     final Set<GavPattern> matched) {
+        if (exclusions == null || exclusions.isEmpty()) return artifacts;
 
-        Rule first = null;
-        for (final var license : licenses) {
-            for (final var rule : rules) {
-                if (rule.matches(license)) {
-                    matchedRules.add(rule);
-                    if (first == null) first = rule;
-                }
-            }
+        final var map = new java.util.HashMap<Artifact, CheckedDependency>();
+        final var deps = new ArrayList<CheckedDependency>();
+        for (final var artifact : artifacts) {
+            final var dep = new MavenCheckedDependency(artifact.getGroupId(), artifact.getArtifactId(),
+                    artifact.getVersion(), List.of());
+            map.put(artifact, dep);
+            deps.add(dep);
         }
-        return first;
+
+        final var filtered = LicenseChecker.filter(deps, exclusions, matched);
+        final var result = new HashSet<Artifact>();
+        for (final var artifact : artifacts) {
+            if (filtered.contains(map.get(artifact))) result.add(artifact);
+        }
+        return result;
+    }
+
+    public static GavPattern findMatch(final Artifact artifact, final Set<GavPattern> patterns) {
+        return LicenseChecker.findMatch(artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion(), patterns);
     }
 
     private static String values(final Enum<?>... constants) {
         return Arrays.stream(constants).map(Enum::name).collect(joining(", "));
+    }
+
+    private record MavenCheckedDependency(String groupId, String artifactId, String version,
+                                         List<checklicense.model.License> licenses)
+            implements CheckedDependency {
+    }
+
+    private record MavenLogger(org.apache.maven.plugin.logging.Log log) implements Logger {
+        public void info(final String message) {
+            log.info(message);
+        }
+
+        public void warn(final String message) {
+            log.warn(message);
+        }
     }
 
 }

@@ -2,7 +2,7 @@ package checklicense;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
-import org.apache.maven.model.License;
+import checklicense.model.License;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.DefaultProjectBuildingRequest;
 import org.apache.maven.project.MavenProject;
@@ -589,7 +589,19 @@ public class MavenCheckLicenseTest {
         when(builder.build(any(Artifact.class), any(ProjectBuildingRequest.class))).thenAnswer(invocation -> {
             final Artifact artifact = invocation.getArgument(0);
             final var dependencyProject = new MavenProject();
-            dependencyProject.setLicenses(licenses.getOrDefault(artifact, List.of()));
+            final var licenseList = licenses.get(artifact);
+            if (licenseList == null) {
+                dependencyProject.setLicenses(null);
+            } else {
+                final var mavenLicenses = new ArrayList<org.apache.maven.model.License>();
+                for (final var lic : licenseList) {
+                    final var ml = new org.apache.maven.model.License();
+                    ml.setName(lic.name());
+                    ml.setUrl(lic.url());
+                    mavenLicenses.add(ml);
+                }
+                dependencyProject.setLicenses(mavenLicenses);
+            }
             final var result = mock(ProjectBuildingResult.class);
             when(result.getProject()).thenReturn(dependencyProject);
             return result;

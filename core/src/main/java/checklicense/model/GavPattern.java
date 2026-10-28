@@ -1,6 +1,5 @@
 package checklicense.model;
 
-import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.apache.maven.artifact.versioning.VersionRange;
 
@@ -49,10 +48,14 @@ public final class GavPattern {
         }
     }
 
-    public boolean matches(final Artifact artifact) {
-        return matches(groupId, artifact.getGroupId())
-                && matches(artifactId, artifact.getArtifactId())
-                && matchesVersion(artifact.getVersion());
+    public boolean matches(final String groupId, final String artifactId, final String version) {
+        return matches(this.groupId, groupId)
+                && matches(this.artifactId, artifactId)
+                && matchesVersion(version);
+    }
+
+    public boolean matches(final checklicense.CheckedDependency dependency) {
+        return matches(dependency.groupId(), dependency.artifactId(), dependency.version());
     }
 
     private boolean matchesVersion(final String version) {

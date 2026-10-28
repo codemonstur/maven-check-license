@@ -1,14 +1,9 @@
 package checklicense.model;
 
-import org.apache.maven.artifact.Artifact;
-import org.apache.maven.model.License;
 
 import java.util.List;
 
-public record Violation(String groupId, String artifactId, String version, List<License> licenses, Rule rule) {
-    public Violation(final Artifact artifact, final List<License> licenses, final Rule rule) {
-        this(artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion(), licenses, rule);
-    }
+public record Violation(String groupId, String artifactId, String version, List<checklicense.model.License> licenses, Rule rule) {
     public String toMessage() {
         final var builder = new StringBuilder();
 
@@ -16,8 +11,8 @@ public record Violation(String groupId, String artifactId, String version, List<
         if (licenses.isEmpty())
             builder.append(" - no license information found in the pom\n");
         for (final var license : licenses) {
-            builder.append(" - name: ").append(license.getName()).append("\n")
-                    .append("   url : ").append(license.getUrl()).append("\n");
+            builder.append(" - name: ").append(license.name()).append("\n")
+                    .append("   url : ").append(license.url()).append("\n");
         }
         if (rule != null)
             builder.append("   rule: ").append(rule).append("\n");

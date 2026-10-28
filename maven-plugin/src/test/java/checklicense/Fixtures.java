@@ -1,7 +1,7 @@
 package checklicense;
 
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.model.License;
+import checklicense.model.License;
 import org.apache.maven.plugin.logging.Log;
 
 import java.util.List;
@@ -12,9 +12,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /** Shared fixtures for the tests. */
-final class Fixtures {
-
-    private Fixtures() {}
+enum Fixtures {
+    ;
 
     static Artifact artifact(final String groupId, final String artifactId, final String version) {
         return artifact(groupId, artifactId, version, "compile");
@@ -30,10 +29,7 @@ final class Fixtures {
     }
 
     static License license(final String name, final String url) {
-        final var license = new License();
-        license.setName(name);
-        license.setUrl(url);
-        return license;
+        return new License(name, url);
     }
 
     /** A log that records every info and warning message, so tests can assert on the output of the mojo. */

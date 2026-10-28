@@ -1,6 +1,5 @@
 package checklicense.model;
 
-import org.apache.maven.model.License;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -62,8 +61,8 @@ public final class Rule {
         return Arrays.stream(constants).map(Enum::name).collect(joining(", "));
     }
 
-    public boolean matches(final License license) {
-        final var data = field == name ? license.getName() : license.getUrl();
+    public boolean matches(final checklicense.model.License license) {
+        final var data = field == name ? license.name() : license.url();
 
         if (data == null) return false;
         if (type == equal) return value.equals(data);
