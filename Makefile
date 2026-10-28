@@ -51,7 +51,9 @@ release-notes: ## Write release notes in src/docs/releases for the current versi
 
 deploy: ## Clean, build and deploy a version to Github and Maven Central
 	@$(INFO) "Installing core (needed to build the plugin)"
-	@mvn -pl core -am clean deploy
+	@mvn -q -pl core -am clean install -DskipTests
+	@$(INFO) "Publishing core to maven central"
+	@mvn -pl core deploy -DskipTests
 	@$(INFO) "Uploading maven-plugin to maven central"
 	@mvn -pl maven-plugin clean deploy
 	@$(INFO) "Building bobplugin for github release"
