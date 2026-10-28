@@ -89,6 +89,15 @@ public final class MavenCheckLicense extends AbstractMojo {
     public void execute() throws MojoFailureException {
         if (!enabled) return;
 
+        // In a multi-module build, run the check only once, on the top-level project, and aggregate all
+        // reactor modules there. Otherwise every module would report its own (partial) result.
+        final var lastProject = session.getProjects().isEmpty() ? null : session.getProjects().get(session.getProjects().size() - 1);
+        if (session.getProjects() != null && session.getProjects().size() > 1
+                && (lastProject == null || !project.getArtifactId().equals(lastProject.getArtifactId()))) {
+            getLog().debug("Skipping license check on non-aggregating module " + project.getArtifactId());
+            return;
+        }
+
         final var log = getLog();
         final Set<Rule> parsedRules = parseRules();
         final Set<GavPattern> parsedExclusions =
@@ -256,6 +265,10 @@ public final class MavenCheckLicense extends AbstractMojo {
      * collected/reactor project set; for a single module it is just the current project.
      */
     private List<MavenProject> projectsToCheck() {
+        // Aggregate all modules of a multi-module build so a single run covers every dependency.
+        if (session.getProjects() != null && session.getProjects().size() > 1) {
+            return session.getProjects();
+        }
         final var collectedProjects = project.getCollectedProjects();
         if (collectedProjects != null && !collectedProjects.isEmpty()) {
             return collectedProjects;

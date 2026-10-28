@@ -39,8 +39,7 @@ validate: ## Check dependency versions, cves, licenses, and code quality
 	@mvn com.github.codemonstur:maven-check-pom:1.0.0:reorder
 	@mvn versions:display-dependency-updates "-Dmaven.version.ignore=(?i).*(alpha|beta|rc|-m[0-9]+|snapshot).*"
 	@mvn versions:display-plugin-updates
-	@mvn validate -P vulnerabilities
-	@mvn validate -P licenses
+	@mvn verify -P vulnerabilities,licenses -DskipTests -T 1C
 	@mvn validate -P codequality
 
 release-notes: ## Write release notes in src/docs/releases for the current version
@@ -52,11 +51,11 @@ release-notes: ## Write release notes in src/docs/releases for the current versi
 
 deploy: ## Clean, build and deploy a version to Github and Maven Central
 	@$(INFO) "Installing core (needed to build the plugin)"
-	@mvn -q -pl check-license-core clean install -DskipTests
+	@mvn -pl check-license-core clean deploy
 	@$(INFO) "Uploading maven-plugin to maven central"
 	@mvn -pl check-license-maven-plugin clean deploy
 	@$(INFO) "Building bobplugin for github release"
-	@mvn -q -pl check-license-bobplugin package
+	@mvn -pl check-license-bobplugin package
 	@$(INFO) "Creating github release"
 	@gh release create $(NAME)-$(VERSION) \
 		check-license-maven-plugin/target/maven-check-license-$(VERSION).jar \
