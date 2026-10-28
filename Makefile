@@ -31,7 +31,7 @@ coverage: ## Run tests and generate a jacoco coverage report
 	@$(INFO) "Running tests and generating coverage report"
 	@mvn -Dstyle.color=always org.jacoco:jacoco-maven-plugin:0.8.15:prepare-agent test org.jacoco:jacoco-maven-plugin:0.8.15:report
 	@$(INFO) "Coverage report written to target/site/jacoco/index.html"
-	@output=$$(java src/build/CoverageSummary.java target/site/jacoco/jacoco.csv) || exit $$?; \
+	@output=$$(java src/build/CoverageSummary.java maven-plugin/target/site/jacoco/jacoco.csv) || exit $$?; \
 	printf '%s\n' "$$output" | while IFS= read -r line; do $(INFO) "$$line"; done
 
 validate: ## Check dependency versions, cves, licenses, and code quality
