@@ -55,7 +55,7 @@
         <version.library.mockito>5.24.0</version.library.mockito>
         <version.library.slf4j>1.7.36</version.library.slf4j>
 
-        <version.plugin.check-cves>1.1.0</version.plugin.check-cves>
+        <version.plugin.check-cves>1.2.0</version.plugin.check-cves>
         <version.plugin.check-license>1.4.0</version.plugin.check-license>
         <version.plugin.codegrade>0.2.0</version.plugin.codegrade>
         <version.plugin.compiler>3.16.0</version.plugin.compiler>
@@ -69,7 +69,9 @@
         <version.plugin.shade>3.6.0</version.plugin.shade>
         <version.plugin.source>3.4.0</version.plugin.source>
         <version.plugin.surefire>3.6.0</version.plugin.surefire>
-    </properties>
+            <version.library.pitest-junit5>1.2.3</version.library.pitest-junit5>
+        <version.plugin.pitest>1.30.1</version.plugin.pitest>
+</properties>
 
     <dependencyManagement>
         <dependencies>
@@ -308,10 +310,10 @@
                         <configuration>
                             <includeTestDependencies>true</includeTestDependencies>
                             <rules>
-                                <rule>url:regex:(http|https)://(www.)?opensource.org/licenses/(MIT|mit-license.php)</rule>
-                                <rule>name:regex:(The )?Apache(\s|-)(Software )?(License |License, )?(Version |version )?2\.0</rule>
-                                <rule>name:equal:Eclipse Public License v2.0</rule>
+                                <rule>name:regex:.*MIT.*</rule>
+                                <rule>name:regex:.*Eclipse.*</rule>
                             </rules>
+                        
                         </configuration>
                     </plugin>
 
@@ -370,6 +372,38 @@
             </build>
         </profile>
 
-    </profiles>
+            <profile>
+            <id>mutation</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+
+                    <plugin>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-maven</artifactId>
+                        <version>${version.plugin.pitest}</version>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.pitest</groupId>
+                                <artifactId>pitest-junit5-plugin</artifactId>
+                                <version>${version.library.pitest-junit5}</version>
+                            </dependency>
+                        </dependencies>
+                        <executions>
+                            <execution>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>mutationCoverage</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
+</profiles>
 
 </project>

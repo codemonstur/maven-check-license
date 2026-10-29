@@ -74,7 +74,8 @@
                 <version>${version.plugin.surefire}</version>
                 <configuration>
                     <argLine>@{argLine} -Xshare:off -javaagent:${org.mockito:mockito-core:jar}</argLine>
-                </configuration>
+                
+                        </configuration>
             </plugin>
 
             <plugin>
