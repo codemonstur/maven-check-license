@@ -53,10 +53,10 @@
         <version.library.maven>3.10.0</version.library.maven>
         <version.library.maven-annotations>3.16.0</version.library.maven-annotations>
         <version.library.mockito>5.24.0</version.library.mockito>
-        <version.library.slf4j>1.7.36</version.library.slf4j>
+        <version.library.slf4j>2.0.20</version.library.slf4j>
 
         <version.plugin.check-cves>1.2.0</version.plugin.check-cves>
-        <version.plugin.check-license>1.4.0</version.plugin.check-license>
+        <version.plugin.check-license>1.5.0</version.plugin.check-license>
         <version.plugin.codegrade>0.2.0</version.plugin.codegrade>
         <version.plugin.compiler>3.16.0</version.plugin.compiler>
         <version.plugin.dependency>3.9.0</version.plugin.dependency>
@@ -66,12 +66,14 @@
         <version.plugin.javadoc>3.12.0</version.plugin.javadoc>
         <version.plugin.plugin>3.13.1</version.plugin.plugin>
         <version.plugin.publish>0.12.0</version.plugin.publish>
-        <version.plugin.shade>3.6.0</version.plugin.shade>
+        <version.plugin.shade>3.6.2</version.plugin.shade>
         <version.plugin.source>3.4.0</version.plugin.source>
         <version.plugin.surefire>3.6.0</version.plugin.surefire>
             <version.library.pitest-junit5>1.2.3</version.library.pitest-junit5>
         <version.plugin.pitest>1.30.1</version.plugin.pitest>
-</properties>
+        <version.plugin.jacoco>0.8.15</version.plugin.jacoco>
+            <version.plugin.flatten>1.8.0</version.plugin.flatten>
+    </properties>
 
     <dependencyManagement>
         <dependencies>
@@ -79,7 +81,7 @@
             <dependency>
                 <groupId>com.github.codemonstur</groupId>
                 <artifactId>check-license-core</artifactId>
-                <version>1.5.0</version>
+                <version>${project.version}</version>
             </dependency>
 
             <dependency>
@@ -137,6 +139,23 @@
     <build>
         <pluginManagement>
             <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${version.plugin.jacoco}</version>
+                <executions>
+                    <execution>
+                        <id>pre-unit-test</id>
+                        <goals><goal>prepare-agent</goal></goals>
+                    </execution>
+                    <execution>
+                        <id>post-unit-test</id>
+                        <phase>test</phase>
+                        <goals><goal>report</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+
 
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -148,7 +167,10 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${version.plugin.surefire}</version>
-                </plugin>
+                                <configuration>
+                    <argLine>@{argLine} -Xshare:off</argLine>
+                </configuration>
+            </plugin>
 
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -236,7 +258,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>flatten-maven-plugin</artifactId>
-                <version>1.8.0</version>
+                <version>${version.plugin.flatten}</version>
                 <configuration>
                     <flattenMode>ossrh</flattenMode>
                 </configuration>
