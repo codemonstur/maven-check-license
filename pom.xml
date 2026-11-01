@@ -37,7 +37,6 @@
     <modules>
         <module>core</module>
         <module>maven-plugin</module>
-        <module>bobplugin</module>
     </modules>
 
     <properties>
@@ -426,6 +425,17 @@
                 </plugins>
             </build>
         </profile>
+    <profile>
+        <id>bobplugin</id>
+        <activation>
+            <property>
+                <name>!env.SKIP_BOBPLUGIN</name>
+            </property>
+        </activation>
+        <modules>
+            <module>bobplugin</module>
+        </modules>
+    </profile>
 </profiles>
 
 </project>
