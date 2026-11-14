@@ -6,11 +6,11 @@ import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.License;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.*;
 
+import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -37,7 +37,7 @@ public final class MavenCheckLicense extends AbstractMojo {
     public MavenProject project;
     @Parameter(defaultValue = "${session}", readonly = true, required = true)
     public MavenSession session;
-    @Component
+    @Inject
     public ProjectBuilder projectBuilder;
 
     @Parameter(defaultValue = "true")

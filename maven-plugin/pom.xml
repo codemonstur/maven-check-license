@@ -1,14 +1,10 @@
 <project>
     <modelVersion>4.0.0</modelVersion>
 
-    <properties>            <maven.compiler.release>17</maven.compiler.release>
-            <version.plugin.jacoco>0.8.15</version.plugin.jacoco>
-    </properties>
-
     <parent>
         <groupId>com.github.codemonstur</groupId>
         <artifactId>check-license-parent</artifactId>
-        <version>1.5.0</version>
+        <version>1.6.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -18,6 +14,10 @@
     <name>${project.groupId}:${project.artifactId}</name>
     <description>A maven plugin for checking licenses of dependencies</description>
     <url>https://github.com/codemonstur/maven-check-license</url>
+
+    <properties>            <maven.compiler.release>17</maven.compiler.release>
+            <version.plugin.jacoco>0.8.16</version.plugin.jacoco>
+    </properties>
 
     <dependencies>
 
